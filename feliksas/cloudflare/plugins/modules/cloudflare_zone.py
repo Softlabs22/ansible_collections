@@ -33,27 +33,25 @@ options:
     type:
         description: Cloudflare zone type
         choices: ['full', 'partial', 'secondary']
+        default: full
         required: false
         type: str
 author:
-    - Andrey Ignatov (andrey.ignatov@agcsoft.com)
+    - Andrey Ignatov (feliksas@feliksas.lv)
 '''
 
 EXAMPLES = r'''
-# Create new zone
 - name: Create zone "example.com"
   feliksas.cloudflare.cloudflare_zone:
     name: example.com
     account_id: 3973f6861c3ceb48ff96a33cec4d02e2
 
-# Create a secondary zone
 - name: Create secondary zone "example.com"
   feliksas.cloudflare.cloudflare_zone:
     name: example.com
     account_id: 3973f6861c3ceb48ff96a33cec4d02e2
     type: secondary
 
-# Ensure absence of zone
 - name: Ensure that zone "example.com" does not exist
   feliksas.cloudflare.cloudflare_zone:
     name: example.com
@@ -62,7 +60,6 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
-# These are examples of possible return values, and in general should use other names for return values.
 zone:
     description: Cloudflare zone object
     type: dict
@@ -87,14 +84,12 @@ zone:
             description: Cloudflare account name
             type: str
             returned: success
-            sample: "My Cloudflare account"
+            sample: My Cloudflare account
       activated_on:
         description: Cloudflare zone activation date in ISO8601 format
         type: str
         returned: success
-        sample:
-          - "2020-07-03T10:10:15.339911+00:00"
-          - ""
+        sample: "2020-07-03T10:10:15.339911+00:00"
       created_on:
         description: Cloudflare zone creation date in ISO8601 format
         type: str
@@ -109,7 +104,7 @@ zone:
         description: Cloudflare zone name
         type: str
         returned: success
-        sample: "example.com"
+        sample: example.com
       name_servers:
         description: Cloudflare zone allocated name servers
         type: list
@@ -145,14 +140,12 @@ zone:
             description: Cloudflare zone owner account name
             type: str
             returned: success
-            sample: "My Cloudflare account"
+            sample: My Cloudflare account
           type:
             description: Cloudflare zone owner account type
             type: str
             returned: success
-            sample:
-              - organization
-              - user
+            sample: user
       paused:
         description: Cloudflare zone pause flag
         type: bool
@@ -161,20 +154,12 @@ zone:
         description: Cloudflare zone status
         type: str
         returned: success
-        sample:
-          - active
-          - initializing
-          - pending
-          - moved
+        sample: active
       type:
         description: Cloudflare zone type
         type: str
         returned: success
-        sample:
-          - full
-          - partial
-          - secondary
-          - internal
+        sample: full
       plan:
         description: Cloudflare zone plan information
         type: dict
@@ -184,16 +169,12 @@ zone:
             description: Cloudflare zone plan ID
             type: str
             returned: success
-            sample:
-              - 0feeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-              - 94f3b7b768b0458b56d2cac4fe5ec0f9
+            sample: 0feeeeeeeeeeeeeeeeeeeeeeeeeeeeee
           name:
             description: Cloudflare zone plan name
             type: str
             returned: success
-            sample:
-              - "Free Website"
-              - "Enterprise Website"
+            sample: Free Website
 '''
 
 
