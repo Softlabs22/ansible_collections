@@ -1,6 +1,6 @@
 # Ansible Collection - feliksas.cloudflare
 
-This collection manager various resouces within Cloudflare infrastructure.
+This collection manages various resouces within Cloudflare infrastructure.
 
 **Disclaimer: under construction!**
 
