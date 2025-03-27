@@ -9,3 +9,4 @@ Requires cloudflare-python: `pip install cloudflare`
 Available modules:
 
 * cloudflare_zone
+* cloudflare_zone_setting

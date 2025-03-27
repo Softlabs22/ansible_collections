@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
 
-from cloudflare import Cloudflare
-from cloudflare.types.zones import Zone, zone_create_params
+import traceback
+from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.basic import AnsibleModule
 
+try:
+    from cloudflare import Cloudflare
+    from cloudflare.types.zones import Zone, zone_create_params
+except ImportError:
+    Cloudflare = None
+    zone_create_params = None
+    Zone = None
+    HAS_CLOUDFLARE = False
+    CLOUDFLARE_IMPORT_ERROR = traceback.format_exc()
+else:
+    HAS_CLOUDFLARE = True
+    CLOUDFLARE_IMPORT_ERROR = None
 
 __metaclass__ = type
 
@@ -14,7 +26,9 @@ short_description: Cloudflare Zone management module
 version_added: "1.0.0"
 
 description: Module for creating Cloudflare zones
-
+requirements:
+  - python-cloudflare >= 4.1.0
+  
 options:
     name:
         description: Root domain name of new zone
@@ -65,48 +79,72 @@ zone:
     type: dict
     returned: success
     contains:
-      id:
-        description: Cloudflare zone ID
-        type: str
-        returned: success
-        sample: 2c42e8bcf86ab98eaa9ea5906f478948
       account:
-        description: Cloudflare account information
+        description: The account the zone belongs to
         type: dict
         returned: success
         contains:
           id:
-            description: Cloudflare account ID
+            description: (Optional) Cloudflare account ID
             type: str
             returned: success
             sample: 3973f6861c3ceb48ff96a33cec4d02e2
           name:
-            description: Cloudflare account name
+            description: (Optional) Cloudflare account name
             type: str
             returned: success
             sample: My Cloudflare account
       activated_on:
-        description: Cloudflare zone activation date in ISO8601 format
+        description: The last time proof of ownership was detected and the zone was made active
         type: str
         returned: success
-        sample: "2020-07-03T10:10:15.339911+00:00"
+        sample: "2020-10-21T13:38:10.816183+00:00"
       created_on:
-        description: Cloudflare zone creation date in ISO8601 format
+        description: When the zone was created
         type: str
         returned: success
-        sample: "2020-07-03T10:10:15.339911+00:00"
+        sample: "2020-10-21T13:38:10.816183+00:00"
+      development_mode:
+        description: The interval (in seconds) from when development mode expires (positive number) or last expired (negative number) for the domain. If development mode has never been enabled, this value is 0.
+        type: float
+        returned: success
+        sample: 0.0
+      meta:
+        description: Metadata about the zone
+        type: dict
+        returned: success
+        contains:
+          cdn_only:
+            description: (Optional) The zone is only configured for CDN
+            type: bool
+            returned: success
+          custom_certificate_quota:
+            description: (Optional) Number of Custom Certificates the zone can have
+            type: int
+          dns_only:
+            description: (Optional) The zone is only configured for DNS
+            type: bool
+          foundation_dns:
+            description: (Optional) The zone is setup with Foundation DNS
+            type: bool
+          page_rule_quota:
+            description: (Optional) Number of Page Rules a zone can have
+            type: int
+          phishing_detected:
+            description: (Optional) The zone has been flagged for phishing
+            type: bool
       modified_on:
-        description: Cloudflare zone modification date in ISO8601 format
+        description: When the zone was last modified
         type: str
         returned: success
-        sample: "2020-07-03T10:10:15.339911+00:00"
+        sample: "2020-10-21T13:38:10.816183+00:00"
       name:
-        description: Cloudflare zone name
+        description: The domain name
         type: str
         returned: success
         sample: example.com
       name_servers:
-        description: Cloudflare zone allocated name servers
+        description: The name servers Cloudflare assigns to a zone
         type: list
         returned: success
         elements: str
@@ -121,45 +159,61 @@ zone:
         sample:
           - ns1.digitalocean.com
           - ns2.digitalocean.com
+      original_dnshost:
+        description: DNS host at the time of switching to Cloudflare
+        type: str
+        returned: success
       original_registrar:
-        description: Cloudflare zone registrar
+        description: Registrar for the domain at the time of switching to Cloudflare
         type: str
         returned: success
         sample: "godaddy.com, llc (id: 146)"
       owner:
-        description: Cloudflare zone owner account information
+        description: The owner of the zone
         type: dict
         returned: success
         contains:
           id:
-            description: Cloudflare zone owner account ID
+            description: (Optional) Cloudflare zone owner account ID
             type: str
             returned: success
             sample: 3973f6861c3ceb48ff96a33cec4d02e2
           name:
-            description: Cloudflare zone owner account name
+            description: (Optional) Cloudflare zone owner account name
             type: str
             returned: success
             sample: My Cloudflare account
           type:
-            description: Cloudflare zone owner account type
+            description: (Optional) Cloudflare zone owner account type
             type: str
             returned: success
             sample: user
       paused:
-        description: Cloudflare zone pause flag
+        description: (Optional) Indicates whether the zone is only using Cloudflare DNS services. A true value means the zone will not receive security or performance benefits.
         type: bool
         returned: success
       status:
-        description: Cloudflare zone status
+        description: The zone status on Cloudflare.
         type: str
         returned: success
         sample: active
       type:
-        description: Cloudflare zone type
+        description: (Optional) A full zone implies that DNS is hosted with Cloudflare. A partial zone is typically a partner-hosted zone or a CNAME setup.
         type: str
         returned: success
         sample: full
+      vanity_name_servers:
+        description: (Optional) An array of domains used for custom name servers. This is only available for Business and Enterprise plans.
+        type: list
+        returned: success
+        elements: str
+        sample:
+          - dns1.example.com
+          - dns2.example.com
+      verification_key:
+        description: (Optional) Verification key for partial zone setup.
+        type: str
+        returned: success
       plan:
         description: Cloudflare zone plan information
         type: dict
@@ -178,38 +232,7 @@ zone:
 '''
 
 
-def populate_zone_dict(zone: Zone) -> dict:
-    target_zone = {
-        "id": zone.id,
-        "account": {
-            "id": zone.account.id,
-            "name": zone.account.name,
-        },
-        "activated_on": zone.activated_on.isoformat() if zone.activated_on is not None else "",
-        "created_on": zone.created_on.isoformat(),
-        "modified_on": zone.modified_on.isoformat(),
-        "name": zone.name,
-        "name_servers": zone.name_servers,
-        "original_name_servers": zone.original_name_servers if zone.original_name_servers is not None else [],
-        "original_registrar": zone.original_registrar if zone.original_registrar is not None else "",
-        "owner": {
-            "id": zone.owner.id if zone.owner.id is not None else "",
-            "name": zone.owner.name if zone.owner.name is not None else "",
-            "type": zone.owner.type if zone.owner.type is not None else "",
-        },
-        "paused": zone.paused if zone.paused is not None else False,
-        "status": zone.status if zone.status is not None else "",
-        "type": zone.type if zone.type is not None else "",
-        "plan": {
-            "id": zone.plan.get("id", ""),
-            "name": zone.plan.get("name", ""),
-        }
-    }
-    return target_zone
-
-
 def run_module():
-    # define available arguments/parameters a user can pass to the module
     module_args = dict(
         name=dict(type='str', required=True),
         account_id=dict(type='str', required=True),
@@ -227,6 +250,12 @@ def run_module():
         supports_check_mode=True
     )
 
+    if not HAS_CLOUDFLARE:
+        module.fail_json(
+            msg=missing_required_lib('cloudflare'),
+            exception=CLOUDFLARE_IMPORT_ERROR
+        )
+
     cf = Cloudflare()
     zones = None
     try:
@@ -236,8 +265,8 @@ def run_module():
 
     for zone in zones:
         if zone.name == module.params['name']:
-            target_zone = populate_zone_dict(zone)
-            result['zone'] = target_zone
+            result['zone'] = zone.to_dict()
+            break
 
     if module.check_mode:
         module.exit_json(**result)
@@ -258,7 +287,7 @@ def run_module():
             except Exception as e:
                 module.fail_json(msg=f"Could not create new zone: {str(e)}", **result)
             if new_zone is not None:
-                result['zone'] = populate_zone_dict(new_zone)
+                result['zone'] = new_zone.to_dict()
             else:
                 module.fail_json(msg=f"BUG: Cloudflare zone creation request did not return zone object", **result)
             result['changed'] = True
