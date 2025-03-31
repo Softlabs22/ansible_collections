@@ -263,7 +263,6 @@ def run_module():
                     zone_id=zone_id,
                     ruleset_id=result['ruleset']['id']
                 )
-                result['ruleset'] = {}
                 result['changed'] = True
             except Exception as e:
                 module.fail_json(msg=f"Could not delete ruleset: {str(e)}", **result)
