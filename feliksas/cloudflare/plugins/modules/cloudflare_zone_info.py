@@ -6,11 +6,9 @@ from ansible.module_utils.basic import AnsibleModule
 
 try:
     from cloudflare import Cloudflare
-    from cloudflare.types.zones import Zone, zone_create_params
 except ImportError:
     Cloudflare = None
-    zone_create_params = None
-    Zone = None
+
     HAS_CLOUDFLARE = False
     CLOUDFLARE_IMPORT_ERROR = traceback.format_exc()
 else:
