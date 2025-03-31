@@ -8,6 +8,7 @@ Requires cloudflare-python: `pip install cloudflare`
 
 Available modules:
 
+* cloudflare_account_info
 * cloudflare_zone
 * cloudflare_zone_info
 * cloudflare_zone_setting
