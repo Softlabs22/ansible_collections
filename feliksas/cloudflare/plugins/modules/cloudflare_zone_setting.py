@@ -127,8 +127,8 @@ setting:
       type: string
       returned: success
       sample: 0rtt
-    value:
-      description: Setting value, can be dict or string
+    current_value:
+      description: Current setting value (previous value, when changed is true), can be dict or string
       returned: success
       type: raw
       sample:
@@ -139,6 +139,10 @@ setting:
             max_age: 0.0
             nosniff: false
             preload: false
+    new_value:
+      description: New setting value, if changes have been made
+      returned: success
+      type: raw
 '''
 
 
@@ -227,7 +231,8 @@ def run_module():
         changed=False,
         setting={
             "name": module.params["setting_id"],
-            "value": {},
+            "current_value": {},
+            "new_value": {},
         },
     )
 
@@ -250,23 +255,24 @@ def run_module():
             module.fail_json(msg=f"Zone '{module.params['zone_name']}' does not exist", **result)
         setting = cf.zones.settings.get(setting_id=module.params['setting_id'], zone_id=zone.id)
         if not isinstance(setting.value, str):
-            result['setting']['value'] = setting.value.to_dict()
+            result['setting']['current_value'] = setting.value.to_dict()
         else:
-            result['setting']['value'] = setting.value
+            result['setting']['current_value'] = setting.value
     except Exception as e:
         module.fail_json(msg=f"Unable to fetch zone setting from Cloudflare: {str(e)}", **result)
 
-    if module.check_mode:
-        module.exit_json(**result)
-
-    if not isinstance(module.params['value'], type(result['setting']['value'])):
+    if not isinstance(module.params['value'], type(result['setting']['current_value'])):
         module.fail_json(
-            msg=f"Wrong value type for '{module.params['setting_id']}': {type(result['setting']['value']).__name__} expected, {type(module.params['value']).__name__} given",
+            msg=f"Wrong value type for '{module.params['setting_id']}': {type(result['setting']['current_value']).__name__} expected, {type(module.params['value']).__name__} given",
             **result)
 
-    new_value = build_new_value(result['setting']['value'], module.params['value'])
+    new_value = build_new_value(result['setting']['current_value'], module.params['value'])
 
-    if new_value != result['setting']['value']:
+    if module.check_mode:
+        result['setting']['new_value'] = new_value
+        module.exit_json(**result)
+
+    if new_value != result['setting']['current_value']:
         try:
             # noinspection PyArgumentList
             response = cf.zones.settings.edit(
@@ -280,9 +286,9 @@ def run_module():
             else:
                 updated_value = response.value
 
-            if result['setting']['value'] != updated_value:
+            if result['setting']['current_value'] != updated_value:
                 result['changed'] = True
-                result['setting']['value'] = updated_value
+                result['setting']['new_value'] = updated_value
             else:
                 module.fail_json("BUG: Requested to change value, but actual value did not change", **result)
         except Exception as e:

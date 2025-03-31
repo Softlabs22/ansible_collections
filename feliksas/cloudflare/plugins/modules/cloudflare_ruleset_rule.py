@@ -429,7 +429,6 @@ def run_module():
                     ruleset_id=ruleset.id,
                     rule_id=result['rule']['id']
                 )
-                result['rule'] = {}
                 result['changed'] = True
             except Exception as e:
                 module.fail_json(msg=f"Could not delete rule: {str(e)}", **result)
