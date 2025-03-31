@@ -236,9 +236,6 @@ def run_module():
             result['zone'] = zone.to_dict()
             break
 
-    if len(result['zone'].keys()) == 0:
-        module.fail_json(msg=f"Zone {module.params['name']} does not exist", **result)
-
     if module.check_mode:
         module.exit_json(**result)
 
