@@ -223,7 +223,7 @@ def run_module():
     except Exception as e:
         module.fail_json(msg=f"Could not fetch rulesets from Cloudflare: {str(e)}", **result)
 
-    else:
+    if ruleset_id is not None:
         try:
             result['ruleset'] = cf.rulesets.get(
                 account_id=module.params['account_id'],
