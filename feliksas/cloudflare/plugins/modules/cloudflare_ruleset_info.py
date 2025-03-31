@@ -223,8 +223,6 @@ def run_module():
     except Exception as e:
         module.fail_json(msg=f"Could not fetch rulesets from Cloudflare: {str(e)}", **result)
 
-    if ruleset_id is None:
-        module.fail_json(msg=f"Ruleset {module.params['name']} does not exist in phase {module.params['phase']}", **result)
     else:
         try:
             result['ruleset'] = cf.rulesets.get(

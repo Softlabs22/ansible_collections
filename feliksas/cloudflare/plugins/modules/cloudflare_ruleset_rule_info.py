@@ -310,10 +310,6 @@ def run_module():
             if rule.ref == module.params['ref'] or rule.description == module.params['description']:
                 result['rule'] = rule.to_dict()
                 break
-        if len(result['rule'].keys()) == 0:
-            module.fail_json(msg=f"Requested rule not found in ruleset \"{module.params['ruleset_name']}\"", **result)
-    else:
-        module.fail_json(msg=f"Ruleset \"{module.params['ruleset_name']}\" is empty", **result)
 
     if module.check_mode:
         module.exit_json(**result)
