@@ -305,7 +305,7 @@ def run_module():
             'force_connection_close',
         ]),
         action_parameters=dict(type='dict', required=False),
-        enabled=dict(type='bool', required=False),
+        enabled=dict(type='bool', required=False, default=True),
         exposed_credential_check=dict(type='dict', required=False),
         expression=dict(type='str', required=False),
         logging=dict(type='dict', required=False),
