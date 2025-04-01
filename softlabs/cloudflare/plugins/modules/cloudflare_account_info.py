@@ -32,12 +32,12 @@ options:
         required: true
         type: str
 author:
-    - Andrey Ignatov (feliksas@feliksas.lv)
+    - Andrey Ignatov (andrey.ignatov@agcsoft.com)
 '''
 
 EXAMPLES = r'''
 - name: Query account "My Account"
-  feliksas.cloudflare.cloudflare_account_info:
+  softlabs.cloudflare.cloudflare_account_info:
     name: My Account
   register: result
 '''

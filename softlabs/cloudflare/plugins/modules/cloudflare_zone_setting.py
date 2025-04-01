@@ -97,18 +97,18 @@ options:
         required: true
         type: raw
 author:
-    - Andrey Ignatov (feliksas@feliksas.lv)
+    - Andrey Ignatov (andrey.ignatov@agcsoft.com)
 '''
 
 EXAMPLES = r'''
 - name: Change simple setting
-  feliksas.cloudflare.cloudflare_zone_setting:
+  softlabs.cloudflare.cloudflare_zone_setting:
     zone_name: example.com
     setting_id: 0rtt
     value: off
     
 - name: Change setting with complex value
-  feliksas.cloudflare.cloudflare_zone_setting:
+  softlabs.cloudflare.cloudflare_zone_setting:
     zone_name: example.com
     setting_id: security_header
     value:
