@@ -69,18 +69,18 @@ options:
           - magic_transit_managed
           - magic_transit_ratelimit
 author:
-    - Andrey Ignatov (feliksas@feliksas.lv)
+    - Andrey Ignatov (andrey.ignatov@agcsoft.com)
 '''
 
 EXAMPLES = r'''
 - name: Query zone-scoped ruleset
-  feliksas.cloudflare.cloudflare_ruleset_info:
+  softlabs.cloudflare.cloudflare_ruleset_info:
     name: My ruleset
     zone_name: example.com
     phase: http_request_firewall_custom
     
 - name: Query account-scoped ruleset
-  feliksas.cloudflare.cloudflare_ruleset_info:
+  softlabs.cloudflare.cloudflare_ruleset_info:
     name: My ruleset
     account_id: 3973f6861c3ceb48ff96a33cec4d02e2
     phase: http_request_firewall_custom

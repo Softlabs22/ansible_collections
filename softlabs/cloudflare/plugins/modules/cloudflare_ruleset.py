@@ -84,26 +84,26 @@ options:
         required: false
         type: str
 author:
-    - Andrey Ignatov (feliksas@feliksas.lv)
+    - Andrey Ignatov (andrey.ignatov@agcsoft.com)
 '''
 
 EXAMPLES = r'''
 - name: Create account ruleset
-  feliksas.cloudflare.cloudflare_ruleset:
+  softlabs.cloudflare.cloudflare_ruleset:
     name: My ruleset
     account_id: 3973f6861c3ceb48ff96a33cec4d02e2
     kind: custom
     phase: http_request_firewall_custom
 
 - name: Create zone ruleset
-  feliksas.cloudflare.cloudflare_ruleset:
+  softlabs.cloudflare.cloudflare_ruleset:
     name: My ruleset
     zone_name: example.com
     kind: custom
     phase: http_request_firewall_custom
 
 - name: Delete ruleset
-  feliksas.cloudflare.cloudflare_ruleset:
+  softlabs.cloudflare.cloudflare_ruleset:
     name: My ruleset
     account_id: 3973f6861c3ceb48ff96a33cec4d02e2
     state: absent

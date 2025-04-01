@@ -6,9 +6,10 @@ from ansible.module_utils.basic import AnsibleModule
 
 try:
     from cloudflare import Cloudflare
+    from cloudflare.types.zones import zone_create_params
 except ImportError:
     Cloudflare = None
-
+    zone_create_params = None
     HAS_CLOUDFLARE = False
     CLOUDFLARE_IMPORT_ERROR = traceback.format_exc()
 else:
@@ -19,28 +20,56 @@ __metaclass__ = type
 
 DOCUMENTATION = r'''
 ---
-module: cloudflare_zone_info
-short_description: Cloudflare Zone query module
-version_added: "1.2.0"
+module: cloudflare_zone
+short_description: Cloudflare Zone management module
+version_added: "1.0.0"
 
-description: Module for retrieving information about a Cloudflare zone
+description: Module for creating Cloudflare zones
 requirements:
   - python-cloudflare >= 4.1.0
   
 options:
     name:
-        description: Zone domain name
+        description: Root domain name of new zone
         required: true
         type: str
+    state:
+        description: Desired zone state
+        choices: ['present', 'absent']
+        default: present
+        required: false
+        type: str
+    account_id:
+        description: Cloudflare account ID to create new zone in
+        required: true
+        type: str
+    type:
+        description: Cloudflare zone type
+        choices: ['full', 'partial', 'secondary']
+        default: full
+        required: false
+        type: str
 author:
-    - Andrey Ignatov (feliksas@feliksas.lv)
+    - Andrey Ignatov (andrey.ignatov@agcsoft.com)
 '''
 
 EXAMPLES = r'''
-- name: Query zone "example.com"
-  feliksas.cloudflare.cloudflare_zone_info:
+- name: Create zone "example.com"
+  softlabs.cloudflare.cloudflare_zone:
     name: example.com
-  register: result
+    account_id: 3973f6861c3ceb48ff96a33cec4d02e2
+
+- name: Create secondary zone "example.com"
+  softlabs.cloudflare.cloudflare_zone:
+    name: example.com
+    account_id: 3973f6861c3ceb48ff96a33cec4d02e2
+    type: secondary
+
+- name: Ensure that zone "example.com" does not exist
+  softlabs.cloudflare.cloudflare_zone:
+    name: example.com
+    account_id: 3973f6861c3ceb48ff96a33cec4d02e2
+    state: absent
 '''
 
 RETURN = r'''
@@ -205,9 +234,13 @@ zone:
 def run_module():
     module_args = dict(
         name=dict(type='str', required=True),
+        account_id=dict(type='str', required=True),
+        state=dict(type='str', required=False, default='present', choices=['present', 'absent']),
+        type=dict(type='str', required=False, default='full', choices=['full', 'partial', 'secondary']),
     )
 
     result = dict(
+        changed=False,
         zone={},
     )
 
@@ -236,6 +269,34 @@ def run_module():
 
     if module.check_mode:
         module.exit_json(**result)
+
+    if module.params['state'] == 'present':
+        if len(result["zone"].keys()) == 0:
+            new_zone = None
+            if module.params.get('account_id', None) is None:
+                module.fail_json(msg=f"'account_id' must be specified when 'create' is set to true", **result)
+            try:
+                new_zone = cf.zones.create(
+                    name=module.params['name'],
+                    account=zone_create_params.Account(
+                        id=module.params['account_id'],
+                    ),
+                    type=module.params['type'],
+                )
+            except Exception as e:
+                module.fail_json(msg=f"Could not create new zone: {str(e)}", **result)
+            if new_zone is not None:
+                result['zone'] = new_zone.to_dict()
+            else:
+                module.fail_json(msg=f"BUG: Cloudflare zone creation request did not return zone object", **result)
+            result['changed'] = True
+    elif module.params['state'] == 'absent':
+        if len(result["zone"].keys()) > 0:
+            try:
+                cf.zones.delete(zone_id=result['zone']['id'])
+                result['changed'] = True
+            except Exception as e:
+                module.fail_json(msg=f"Could not delete zone: {str(e)}", **result)
 
     module.exit_json(**result)
 

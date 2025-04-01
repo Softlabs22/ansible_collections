@@ -1,4 +1,4 @@
-# Ansible Collection - feliksas.cloudflare
+# Ansible Collection - softlabs.cloudflare
 
 This collection manages various resouces within Cloudflare infrastructure.
 

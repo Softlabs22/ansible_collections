@@ -78,13 +78,13 @@ options:
         required: false
         type: str
 author:
-    - Andrey Ignatov (feliksas@feliksas.lv)
+    - Andrey Ignatov (andrey.ignatov@agcsoft.com)
 '''
 
 EXAMPLES = r'''
 - name: Query rule in zone-scoped ruleset by description
   cloudflare_ruleset_rule_info:
-  feliksas.cloudflare.cloudflare_ruleset_rule_info:
+  softlabs.cloudflare.cloudflare_ruleset_rule_info:
     description: My rule for cache settings
     zone_name: example.com
     ruleset_name: My ruleset
@@ -92,14 +92,14 @@ EXAMPLES = r'''
     
 - name: Query rule in zone-scoped ruleset by description
   cloudflare_ruleset_rule_info:
-  feliksas.cloudflare.cloudflare_ruleset_rule_info:
+  softlabs.cloudflare.cloudflare_ruleset_rule_info:
     description: My rule for cache settings
     account_id: 3973f6861c3ceb48ff96a33cec4d02e2
     ruleset_name: My ruleset
     phase: http_request_cache_settings
     
 - name: Query rule in zone-scoped ruleset by ref
-  feliksas.cloudflare.cloudflare_ruleset_rule_info:
+  softlabs.cloudflare.cloudflare_ruleset_rule_info:
     ref: my_rule
     zone_name: example.com
     ruleset_name: My ruleset

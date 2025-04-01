@@ -105,12 +105,12 @@ options:
         required: false
         type: str
 author:
-    - Andrey Ignatov (feliksas@feliksas.lv)
+    - Andrey Ignatov (andrey.ignatov@agcsoft.com)
 '''
 
 EXAMPLES = r'''
 - name: Create rule
-  feliksas.cloudflare.cloudflare_ruleset_rule:
+  softlabs.cloudflare.cloudflare_ruleset_rule:
     ref: my_rule
     zone_name: example.com
     ruleset_name: My ruleset
@@ -125,7 +125,7 @@ EXAMPLES = r'''
     expression: '(http.host contains "example.com")'
     
 - name: Modify rule
-  feliksas.cloudflare.cloudflare_ruleset_rule:
+  softlabs.cloudflare.cloudflare_ruleset_rule:
     ref: my_rule
     zone_name: example.com
     ruleset_name: My ruleset
@@ -140,7 +140,7 @@ EXAMPLES = r'''
     expression: '(http.host contains "subdomain.example.com")'    
     
 - name: Disable rule
-  feliksas.cloudflare.cloudflare_ruleset_rule:
+  softlabs.cloudflare.cloudflare_ruleset_rule:
     ref: my_rule
     zone_name: example.com
     ruleset_name: My ruleset
@@ -156,7 +156,7 @@ EXAMPLES = r'''
     enabled: false
 
 - name: Delete rule
-  feliksas.cloudflare.cloudflare_ruleset_rule:
+  softlabs.cloudflare.cloudflare_ruleset_rule:
     ref: my_rule
     zone_name: example.com
     ruleset_name: My ruleset
