@@ -2,9 +2,7 @@
 
 This collection manages various resouces within Cloudflare infrastructure.
 
-**Disclaimer: under construction!**
-
-Requires cloudflare-python: `pip install cloudflare`
+Requires cloudflare-python and jsonpickle: `pip install cloudflare jsonpickle`
 
 Available modules:
 
