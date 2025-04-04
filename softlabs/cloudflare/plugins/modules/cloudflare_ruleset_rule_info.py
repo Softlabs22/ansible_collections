@@ -29,11 +29,11 @@ requirements:
 
 options:
     ref:
-        description: The reference name of the rule. Mutually exclusive with description
+        description: The reference name of the rule. Mutually exclusive with O(description)
         required: false
         type: str
     description:
-        description: Description of the rule (acts as name in Cloudflare dashboard). Mutually exclusive with ref
+        description: Description of the rule (acts as name in Cloudflare dashboard). Mutually exclusive with O(ref)
         required: false
         type: str
     ruleset_name:
@@ -70,11 +70,11 @@ options:
           - magic_transit_managed
           - magic_transit_ratelimit
     zone_name:
-        description: Zone domain name. Specify when querying rules in zone-scoped rulesets. Mutually exclusive with account_id.
+        description: Zone domain name. Specify when querying rules in zone-scoped rulesets. Mutually exclusive with O(account_id).
         required: false
         type: str
     account_id:
-        description: Cloudflare account ID. Specify when querying rules in account-scoped rulesets. Mutually exclusive with zone_name.
+        description: Cloudflare account ID. Specify when querying rules in account-scoped rulesets. Mutually exclusive with O(zone_name).
         required: false
         type: str
 author:

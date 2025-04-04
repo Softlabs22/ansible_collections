@@ -128,7 +128,7 @@ setting:
       returned: success
       sample: 0rtt
     current_value:
-      description: Current setting value (previous value, when changed is true), can be dict or string
+      description: Current setting value (previous value, when RV(changed=true)), can be dict or string
       returned: success
       type: raw
       sample:
