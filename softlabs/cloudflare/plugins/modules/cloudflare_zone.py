@@ -104,7 +104,9 @@ zone:
         returned: success
         sample: "2020-10-21T13:38:10.816183+00:00"
       development_mode:
-        description: The interval (in seconds) from when development mode expires (positive number) or last expired (negative number) for the domain. If development mode has never been enabled, this value is 0.
+        description: >
+          The interval (in seconds) from when development mode expires (positive number) or last expired (negative number) for the domain.
+          If development mode has never been enabled, this value is 0.
         type: float
         returned: success
         sample: 0.0
@@ -188,7 +190,9 @@ zone:
             returned: success
             sample: user
       paused:
-        description: (Optional) Indicates whether the zone is only using Cloudflare DNS services. A true value means the zone will not receive security or performance benefits.
+        description: >
+          (Optional) Indicates whether the zone is only using Cloudflare DNS services.
+          A true value means the zone will not receive security or performance benefits.
         type: bool
         returned: success
       status:

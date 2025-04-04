@@ -22,7 +22,9 @@ module: cloudflare_ruleset
 short_description: Cloudflare Ruleset management module
 version_added: "1.2.0"
 
-description: Module for managing Cloudflare rulesets for DDoS protection, WAF, Ratelimiting etc. Only creation and deletion is supported, for rule management - use module V(cloudflare_ruleset_rule)
+description: >
+  Module for managing Cloudflare rulesets for DDoS protection, WAF, Ratelimiting etc.
+  Only ruleset creation and deletion is supported, for rule management - use module V(cloudflare_ruleset_rule)
 options:
 requirements:
   - python-cloudflare >= 4.1.0
@@ -37,11 +39,11 @@ options:
         required: false
         type: str
     zone_name:
-        description: Zone domain name. Specify when creating zone-scoped rulesets. Mutually exclusive with account_id.
+        description: Zone domain name. Specify when creating zone-scoped rulesets. Mutually exclusive with O(account_id).
         required: false
         type: str
     account_id:
-        description: Cloudflare account. Specify when creating account-scoped rulesets. Mutually exclusive with zone_name.
+        description: Cloudflare account. Specify when creating account-scoped rulesets. Mutually exclusive with O(zone_name).
         required: false
         type: str
     kind:

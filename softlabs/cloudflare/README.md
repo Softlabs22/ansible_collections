@@ -16,3 +16,5 @@ Available modules:
 * cloudflare_ruleset_info
 * cloudflare_ruleset_rule
 * cloudflare_ruleset_rule_info
+* cloudflare_page_rule
+* cloudflare_rules_list

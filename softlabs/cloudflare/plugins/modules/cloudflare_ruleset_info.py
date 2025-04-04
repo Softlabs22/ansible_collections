@@ -33,11 +33,11 @@ options:
         required: true
         type: str
     zone_name:
-        description: Zone domain name. Specify when querying zone-scoped rulesets. Mutually exclusive with account_id.
+        description: Zone domain name. Specify when querying zone-scoped rulesets. Mutually exclusive with O(account_id).
         required: false
         type: str
     account_id:
-        description: Cloudflare account. Specify when querying account-scoped rulesets. Mutually exclusive with zone_name.
+        description: Cloudflare account. Specify when querying account-scoped rulesets. Mutually exclusive with O(zone_name).
         required: false
         type: str
     phase:

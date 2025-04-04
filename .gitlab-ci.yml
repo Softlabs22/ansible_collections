@@ -1,0 +1,7 @@
+include:
+- project: softlabs/pipelines/snippets
+  file: "/security/secret-scan.yml"
+
+stages:
+- scan
+- validate
