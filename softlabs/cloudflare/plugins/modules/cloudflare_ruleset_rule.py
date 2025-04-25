@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import copy
 import traceback
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.basic import AnsibleModule
@@ -277,6 +277,29 @@ rule:
       sample: "4"
 '''
 
+def compare_rules(old_rule, new_rule, existing_ruleset):
+    _old_rule = copy.deepcopy(old_rule)
+    _new_rule = copy.deepcopy(new_rule)
+
+    _old_rule.pop('version')
+    _old_rule.pop('last_updated')
+    _old_rule.pop('id')
+
+    new_position = _new_rule.get('position', {})
+    if "index" in new_position.keys():
+        return _old_rule == _new_rule
+    else:
+        if "before" in new_position.keys():
+            for pos, rule in enumerate(existing_ruleset.rules):
+                if rule.id == new_position["before"]:
+                    _new_rule["position"] = {"index": pos}
+                    return _old_rule == _new_rule
+        elif "after" in new_position.keys():
+            for pos, rule in enumerate(existing_ruleset.rules):
+                if rule.id == new_position["after"]:
+                    _new_rule["position"] = {"index": pos+2}
+                    return _old_rule == _new_rule
+    return False
 
 def run_module():
     module_args = dict(
@@ -330,7 +353,7 @@ def run_module():
             exception=CLOUDFLARE_IMPORT_ERROR
         )
 
-    if (module.params.get('account_id', None) is None and module.params.get('zone_name', None) is None)\
+    if (module.params.get('account_id', None) is None and module.params.get('zone_name', None) is None) \
             or (module.params.get('account_id', None) is not None and module.params.get('zone_name', None) is not None):
         module.fail_json(msg="Either account_id or zone_name must be specified", **result)
 
@@ -354,15 +377,17 @@ def run_module():
         rulesets = cf.rulesets.list(account_id=module.params.get('account_id', None), zone_id=zone_id)
         for rs in rulesets:
             if rs.name == module.params['ruleset_name']:
-                ruleset = cf.rulesets.get(ruleset_id=rs.id, account_id=module.params.get('account_id', None), zone_id=zone_id)
+                ruleset = cf.rulesets.get(ruleset_id=rs.id, account_id=module.params.get('account_id', None),
+                                          zone_id=zone_id)
                 break
     except Exception as e:
         module.fail_json(msg=f"Could not fetch rulesets from Cloudflare: {str(e)}", **result)
 
     if ruleset is not None and ruleset.rules is not None:
-        for rule in ruleset.rules:
+        for pos, rule in enumerate(ruleset.rules):
             if rule.ref == module.params['ref']:
                 result['rule'] = rule.to_dict()
+                result['rule']['position'] = {"index": pos+1}
                 break
 
     if module.check_mode:
@@ -399,17 +424,14 @@ def run_module():
                 except Exception as e:
                     module.fail_json(msg=f"Could not create new rule: {str(e)}", **result)
             else:
-                old_rule_id = result['rule'].pop('id')
-                result['rule'].pop('version')
-                result['rule'].pop('last_updated')
-                if result['rule'] != new_rule_spec:
+                if not compare_rules(result['rule'], new_rule_spec, ruleset):
                     try:
                         changed_ruleset = cf.rulesets.rules.edit(
                             ruleset_id=ruleset.id,
                             account_id=module.params['account_id'],
                             zone_id=zone_id,
-                            rule_id=old_rule_id,
-                            **new_rule_spec
+                            rule_id=result['rule']['id'],
+                            **new_rule_spec,
                         )
                     except Exception as e:
                         module.fail_json(msg=f"Could not update rule: {str(e)}", **result)
