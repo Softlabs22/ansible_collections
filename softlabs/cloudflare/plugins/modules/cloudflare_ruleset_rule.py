@@ -33,9 +33,41 @@ options:
         required: true
         type: str
     ruleset_name:
-        description: The name of the ruleset containing the rule
+        description: >
+          The name of the ruleset containing the rule.
+          Can also be set to "entrypoint" to use the zone/account entrypoint ruleset for the specified phase.
         required: true
         type: str
+    phase:
+        description: >
+          The phase of the ruleset. Required when ruleset_name is "entrypoint".
+          Used to look up the entrypoint ruleset for managed WAF phases.
+        required: false
+        type: str
+        choices:
+          - ddos_l4
+          - ddos_l7
+          - http_config_settings
+          - http_custom_errors
+          - http_log_custom_fields
+          - http_ratelimit
+          - http_request_cache_settings
+          - http_request_dynamic_redirect
+          - http_request_firewall_custom
+          - http_request_firewall_managed
+          - http_request_late_transform
+          - http_request_origin
+          - http_request_redirect
+          - http_request_sanitize
+          - http_request_sbfm
+          - http_request_transform
+          - http_response_compression
+          - http_response_firewall_managed
+          - http_response_headers_transform
+          - magic_transit
+          - magic_transit_ids_managed
+          - magic_transit_managed
+          - magic_transit_ratelimit
     description:
         description: Description of the rule
         required: false
@@ -161,6 +193,30 @@ EXAMPLES = r'''
     zone_name: example.com
     ruleset_name: My ruleset
     state: absent
+
+- name: Enable Cloudflare Managed Ruleset via entrypoint
+  softlabs.cloudflare.cloudflare_ruleset_rule:
+    ref: cloudflare_managed_ruleset
+    zone_name: example.com
+    ruleset_name: entrypoint
+    phase: http_request_firewall_managed
+    action: execute
+    action_parameters:
+      id: "efb7b8c949ac4650a09736fc376e9aee"
+    expression: "true"
+    description: Enable Cloudflare Managed Ruleset
+
+- name: Enable Cloudflare OWASP Core Ruleset with custom filter via entrypoint
+  softlabs.cloudflare.cloudflare_ruleset_rule:
+    ref: cloudflare_owasp_core_ruleset
+    zone_name: example.com
+    ruleset_name: entrypoint
+    phase: http_request_firewall_managed
+    action: execute
+    action_parameters:
+      id: "4814384a9e5d4991b9815dcfc25d2f1f"
+    expression: '(not http.request.uri.query contains "bypass")'
+    description: Enable Cloudflare OWASP Core Ruleset with custom filter
 '''
 
 RETURN = r'''
@@ -282,6 +338,31 @@ def run_module():
     module_args = dict(
         ref=dict(type='str', required=True),
         ruleset_name=dict(type='str', required=True),
+        phase=dict(type='str', required=False, choices=[
+            'ddos_l4',
+            'ddos_l7',
+            'http_config_settings',
+            'http_custom_errors',
+            'http_log_custom_fields',
+            'http_ratelimit',
+            'http_request_cache_settings',
+            'http_request_dynamic_redirect',
+            'http_request_firewall_custom',
+            'http_request_firewall_managed',
+            'http_request_late_transform',
+            'http_request_origin',
+            'http_request_redirect',
+            'http_request_sanitize',
+            'http_request_sbfm',
+            'http_request_transform',
+            'http_response_compression',
+            'http_response_firewall_managed',
+            'http_response_headers_transform',
+            'magic_transit',
+            'magic_transit_ids_managed',
+            'magic_transit_managed',
+            'magic_transit_ratelimit',
+        ]),
         account_id=dict(type='str', required=False),
         zone_name=dict(type='str', required=False),
         description=dict(type='str', required=False),
@@ -334,6 +415,10 @@ def run_module():
             or (module.params.get('account_id', None) is not None and module.params.get('zone_name', None) is not None):
         module.fail_json(msg="Either account_id or zone_name must be specified", **result)
 
+    # Validate that phase is provided when ruleset_name is "entrypoint"
+    if module.params['ruleset_name'] == 'entrypoint' and module.params.get('phase') is None:
+        module.fail_json(msg="phase is required when ruleset_name is 'entrypoint'", **result)
+
     cf = Cloudflare()
 
     zone_id = None
@@ -351,11 +436,24 @@ def run_module():
             else:
                 zone_id = zone.id
 
-        rulesets = cf.rulesets.list(account_id=module.params.get('account_id', None), zone_id=zone_id)
-        for rs in rulesets:
-            if rs.name == module.params['ruleset_name']:
-                ruleset = cf.rulesets.get(ruleset_id=rs.id, account_id=module.params.get('account_id', None), zone_id=zone_id)
-                break
+        # Look up ruleset by phase entrypoint or by name
+        if module.params['ruleset_name'] == 'entrypoint':
+            # Use the entrypoint API to get the ruleset for the specified phase
+            try:
+                ruleset = cf.rulesets.phases.get(
+                    ruleset_phase=module.params['phase'],
+                    account_id=module.params.get('account_id', None),
+                    zone_id=zone_id
+                )
+            except Exception as e:
+                # Entrypoint may not exist yet, which is fine - it will be created when we add a rule
+                pass
+        else:
+            rulesets = cf.rulesets.list(account_id=module.params.get('account_id', None), zone_id=zone_id)
+            for rs in rulesets:
+                if rs.name == module.params['ruleset_name']:
+                    ruleset = cf.rulesets.get(ruleset_id=rs.id, account_id=module.params.get('account_id', None), zone_id=zone_id)
+                    break
     except Exception as e:
         module.fail_json(msg=f"Could not fetch rulesets from Cloudflare: {str(e)}", **result)
 
@@ -369,56 +467,79 @@ def run_module():
         module.exit_json(**result)
 
     if module.params['state'] == 'present':
-        if ruleset is None:
+        if ruleset is None and module.params['ruleset_name'] != 'entrypoint':
             module.fail_json(msg=f"Ruleset '{module.params['ruleset_name']}' does not exist", **result)
-        else:
-            new_rule_spec = {}
-            for param in (
-                    'ref',
-                    'description',
-                    'action',
-                    'action_parameters',
-                    'enabled',
-                    'exposed_credential_check',
-                    'expression',
-                    'logging',
-                    'position',
-                    'ratelimit',
-            ):
-                if module.params[param] is not None:
-                    new_rule_spec[param] = module.params[param]
-            changed_ruleset = None
-            if len(result['rule'].keys()) == 0:
-                try:
+
+        new_rule_spec = {}
+        for param in (
+                'ref',
+                'description',
+                'action',
+                'action_parameters',
+                'enabled',
+                'exposed_credential_check',
+                'expression',
+                'logging',
+                'position',
+                'ratelimit',
+        ):
+            if module.params[param] is not None:
+                new_rule_spec[param] = module.params[param]
+        changed_ruleset = None
+        if len(result['rule'].keys()) == 0:
+            # Rule doesn't exist, create it
+            try:
+                if module.params['ruleset_name'] == 'entrypoint' and ruleset is None:
+                    # Entrypoint doesn't exist, use phase update API to create it with the rule
+                    changed_ruleset = cf.rulesets.phases.update(
+                        ruleset_phase=module.params['phase'],
+                        account_id=module.params.get('account_id', None),
+                        zone_id=zone_id,
+                        rules=[new_rule_spec]
+                    )
+                else:
                     changed_ruleset = cf.rulesets.rules.create(
                         ruleset_id=ruleset.id,
                         account_id=module.params['account_id'],
                         zone_id=zone_id,
                         **new_rule_spec
                     )
+            except Exception as e:
+                module.fail_json(msg=f"Could not create new rule: {str(e)}", **result)
+        else:
+            old_rule_id = result['rule'].pop('id')
+            result['rule'].pop('version', None)
+            result['rule'].pop('last_updated', None)
+            # Remove position from comparison - Cloudflare doesn't return position in rule response
+            # and we shouldn't try to update position if the rule content is otherwise the same
+            old_rule_for_compare = {k: v for k, v in result['rule'].items() if k != 'position'}
+            new_rule_for_compare = {k: v for k, v in new_rule_spec.items() if k != 'position'}
+            # Normalize action_parameters for comparison - Cloudflare adds 'version: latest' which we don't specify
+            if 'action_parameters' in old_rule_for_compare:
+                old_rule_for_compare['action_parameters'] = {
+                    k: v for k, v in old_rule_for_compare['action_parameters'].items()
+                    if k != 'version'
+                }
+            if old_rule_for_compare != new_rule_for_compare:
+                # Exclude position from update - Cloudflare rejects position updates if rule is already there
+                # Position is only used during rule creation
+                update_spec = {k: v for k, v in new_rule_spec.items() if k != 'position'}
+                try:
+                    changed_ruleset = cf.rulesets.rules.edit(
+                        ruleset_id=ruleset.id,
+                        account_id=module.params['account_id'],
+                        zone_id=zone_id,
+                        rule_id=old_rule_id,
+                        **update_spec
+                    )
                 except Exception as e:
-                    module.fail_json(msg=f"Could not create new rule: {str(e)}", **result)
-            else:
-                old_rule_id = result['rule'].pop('id')
-                result['rule'].pop('version')
-                result['rule'].pop('last_updated')
-                if result['rule'] != new_rule_spec:
-                    try:
-                        changed_ruleset = cf.rulesets.rules.edit(
-                            ruleset_id=ruleset.id,
-                            account_id=module.params['account_id'],
-                            zone_id=zone_id,
-                            rule_id=old_rule_id,
-                            **new_rule_spec
-                        )
-                    except Exception as e:
-                        module.fail_json(msg=f"Could not update rule: {str(e)}", **result)
-            if changed_ruleset is not None:
-                for rule in changed_ruleset.rules:
-                    if rule.ref == module.params['ref']:
-                        result['rule'] = rule.to_dict()
-                        break
-                result['changed'] = True
+                    module.fail_json(msg=f"Could not update rule: {str(e)}", **result)
+        if changed_ruleset is not None:
+            for rule in changed_ruleset.rules:
+                if rule.ref == module.params['ref']:
+                    result['rule'] = rule.to_dict()
+                    break
+            result['changed'] = True
 
     elif module.params['state'] == 'absent':
         if ruleset is not None and len(result['rule'].keys()) > 0:  # Don't care if no such ruleset
