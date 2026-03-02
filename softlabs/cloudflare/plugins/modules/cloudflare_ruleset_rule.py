@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import copy
 import traceback
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.basic import AnsibleModule
@@ -155,7 +155,7 @@ EXAMPLES = r'''
       edge_ttl:
         mode: bypass_by_default
     expression: '(http.host contains "example.com")'
-    
+
 - name: Modify rule
   softlabs.cloudflare.cloudflare_ruleset_rule:
     ref: my_rule
@@ -169,8 +169,8 @@ EXAMPLES = r'''
       cache: true
       edge_ttl:
         mode: bypass_by_default
-    expression: '(http.host contains "subdomain.example.com")'    
-    
+    expression: '(http.host contains "subdomain.example.com")'
+
 - name: Disable rule
   softlabs.cloudflare.cloudflare_ruleset_rule:
     ref: my_rule
@@ -411,7 +411,7 @@ def run_module():
             exception=CLOUDFLARE_IMPORT_ERROR
         )
 
-    if (module.params.get('account_id', None) is None and module.params.get('zone_name', None) is None)\
+    if (module.params.get('account_id', None) is None and module.params.get('zone_name', None) is None) \
             or (module.params.get('account_id', None) is not None and module.params.get('zone_name', None) is not None):
         module.fail_json(msg="Either account_id or zone_name must be specified", **result)
 
