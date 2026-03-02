@@ -25,7 +25,7 @@ version_added: "1.2.0"
 description: >
   Module for managing Cloudflare rulesets for DDoS protection, WAF, Ratelimiting etc.
   Only ruleset creation and deletion is supported, for rule management - use module V(cloudflare_ruleset_rule)
-options:
+
 requirements:
   - python-cloudflare >= 4.1.0
 
