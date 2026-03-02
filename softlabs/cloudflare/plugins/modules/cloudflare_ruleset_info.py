@@ -23,7 +23,7 @@ short_description: Cloudflare Ruleset query module
 version_added: "1.2.0"
 
 description: Module for getting information on Cloudflare rulesets
-options:
+
 requirements:
   - python-cloudflare >= 4.1.0
 

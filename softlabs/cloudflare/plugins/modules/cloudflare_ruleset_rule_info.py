@@ -23,7 +23,7 @@ short_description: Cloudflare Rulesets rule query module
 version_added: "1.2.0"
 
 description: Module for getting information on Cloudflare rules
-options:
+
 requirements:
   - python-cloudflare >= 4.1.0
 
@@ -42,7 +42,6 @@ options:
         type: str
     phase:
         description: The phase of the ruleset containing the rule
-        required: false
         required: true
         type: str
         choices:

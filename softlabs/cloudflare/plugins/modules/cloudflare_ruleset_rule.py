@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import copy
 import traceback
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.basic import AnsibleModule
@@ -23,7 +22,7 @@ short_description: Cloudflare Rulesets rule management module
 version_added: "1.2.0"
 
 description: Module for managing Cloudflare rules in a specified ruleset
-options:
+
 requirements:
   - python-cloudflare >= 4.1.0
 
