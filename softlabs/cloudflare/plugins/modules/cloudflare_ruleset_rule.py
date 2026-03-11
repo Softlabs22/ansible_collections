@@ -97,6 +97,7 @@ options:
           - serve_error
           - set_config
           - skip
+          - block
           - set_cache_settings
           - log_custom_field
           - ddos_dynamic
@@ -379,6 +380,7 @@ def run_module():
             'serve_error',
             'set_config',
             'skip',
+            'block',
             'set_cache_settings',
             'log_custom_field',
             'ddos_dynamic',
