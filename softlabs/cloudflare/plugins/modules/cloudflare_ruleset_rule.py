@@ -516,11 +516,14 @@ def run_module():
             old_rule_for_compare = {k: v for k, v in result['rule'].items() if k != 'position'}
             new_rule_for_compare = {k: v for k, v in new_rule_spec.items() if k != 'position'}
             # Normalize action_parameters for comparison - Cloudflare adds 'version: latest' which we don't specify
-            if 'action_parameters' in old_rule_for_compare:
+            if 'action_parameters' in old_rule_for_compare.keys():
                 old_rule_for_compare['action_parameters'] = {
                     k: v for k, v in old_rule_for_compare['action_parameters'].items()
                     if k != 'version'
                 }
+            if new_rule_for_compare['action'] == 'skip' and new_rule_for_compare.get('logging', None) is None:
+                new_rule_for_compare['logging'] = {'enabled': True}  # Cloudflare sets logging to enabled by default for skip actions
+           
             if old_rule_for_compare != new_rule_for_compare:
                 # Exclude position from update - Cloudflare rejects position updates if rule is already there
                 # Position is only used during rule creation
