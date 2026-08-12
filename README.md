@@ -21,5 +21,5 @@ echo "{\"ANSIBLE_MODULE_ARGS\": {\"zone_name\": \"example.com\", \"enabled_reque
 1. Ensure that you have a Galaxy token configured at `~/.ansible/galaxy_token`
 2. Change dir to collection root (where `galaxy.yml` resides)
 3. Bump `version` in the collection's `galaxy.yml`
-4. Build collection: `ansible-collection build`
-5. Publish new version: `ansible-collection publish ./new_tarball.tar.gz`
+4. Build collection: `ansible-galaxy collection build`
+5. Publish new version: `ansible-galaxy collection publish ./new_tarball.tar.gz`
