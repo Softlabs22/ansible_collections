@@ -17,6 +17,7 @@ Requires cloudflare-python and jsonpickle: `pip install cloudflare jsonpickle`
 * cloudflare_page_rule
 * cloudflare_rules_list
 * cloudflare_rules_list_item
+* cloudflare_managed_transforms
 
 ## cloudflare_ruleset_rule
 
