@@ -23,7 +23,9 @@ short_description: Cloudflare Managed Transforms management module
 version_added: "1.8.3"
 
 description: >
-  Module for managing Cloudflare Managed Transforms settings for a zone.
+  Module for managing Cloudflare Managed Transforms settings for a zone. IMPORTANT: The module is designed to maintain
+  the exact state described and is not additive, i.e. any transforms not mentioned in enabled transforms lists will be
+  disabled.
 
 requirements:
   - python-cloudflare >= 4.1.0
@@ -59,10 +61,59 @@ author:
 '''
 
 EXAMPLES = r'''
+- name: Enable visitor location headers
+  softlabs.cloudflare.cloudflare_managed_transforms:
+    zone_name: example.com
+    enabled_request_headers:
+      - add_visitor_location_headers
+- name: Disable all managed transforms
+  softlabs.cloudflare.cloudflare_managed_transforms:
+    zone_name: example.com
+    enabled_response_headers: []
+    enabled_request_headers: []
 '''
 
 RETURN = r'''
-
+managed_transforms:
+  description: Current state of managed transforms for a zone
+  type: dict
+  returned: success
+  contains:
+    managed_request_headers:
+      description: A list with managed request headers rules
+      returned: success
+      type: list
+      sample: 
+        - id: add_client_certificate_headers
+          enabled: false
+          has_conflict: false
+        - id: add_visitor_location_headers
+          enabled: false
+          has_conflict: false
+        - id: add_true_client_ip_headers
+          enabled: false
+          has_conflict: false
+          conflicts_with:
+           - remove_visitor_ip_headers
+        - id: remove_visitor_ip_headers
+          enabled: false
+          has_conflict: false
+          conflicts_with:
+            - add_true_client_ip_headers
+        - id: add_waf_credential_check_status_header
+          enabled: false
+          has_conflict: false
+    managed_response_headers:
+      description: A list with managed response headers rules
+      returned: success
+      type: list
+      sample: 
+        - id: remove_x-powered-by_header
+          enabled: false
+          has_conflict: false
+        - id: add_security_headers
+          enabled: false
+          has_conflict: false
 '''
 
 
