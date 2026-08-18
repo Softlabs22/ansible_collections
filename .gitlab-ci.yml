@@ -1,7 +1,15 @@
 include:
 - project: softlabs/pipelines/snippets
   file: "/security/secret-scan.yml"
+- project: softlabs/pipelines/snippets
+  ref: master
+  file:
+    - "review/claude-code-review.yml"
 
 stages:
 - scan
+- review
 - validate
+
+claude-code-review:
+  extends: .claude-code-review-template
