@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
 import traceback
+
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.basic import AnsibleModule
 
 try:
     from cloudflare import Cloudflare
+    from cloudflare.types.managed_transforms import ManagedTransformListResponse
 except ImportError:
     Cloudflare = None
+    ManagedTransformListResponse = None
     HAS_CLOUDFLARE = False
     CLOUDFLARE_IMPORT_ERROR = traceback.format_exc()
 else:
@@ -143,7 +146,10 @@ def run_module():
     cf = Cloudflare()
 
     zone_id = None
-    managed_transforms = None
+    managed_transforms = ManagedTransformListResponse(
+        managed_request_headers=[],
+        managed_response_headers=[]
+    )
     try:
         zones = cf.zones.list(name=module.params['zone_name'])
         for z in zones:
@@ -173,7 +179,11 @@ def run_module():
         should_enable = request_header.id in module.params['enabled_request_headers']
 
         if should_enable != request_header.enabled:
-            if should_enable and any(x in module.params['enabled_request_headers'] for x in request_header.conflicts_with):
+            if (
+                    should_enable
+                    and request_header.conflicts_with is not None
+                    and any(x in module.params['enabled_request_headers'] for x in request_header.conflicts_with)
+            ):
                 module.fail_json(
                     msg=f"Managed transform {request_header.id} conflicts with "
                         f"{request_header.conflicts_with} and cannot be enabled",
@@ -187,14 +197,18 @@ def run_module():
         should_enable = response_header.id in module.params['enabled_response_headers']
 
         if should_enable != response_header.enabled:
-            if should_enable and any(x in module.params['enabled_response_headers'] for x in response_header.conflicts_with):
+            if (
+                    should_enable
+                    and response_header.conflicts_with is not None
+                    and any(x in module.params['enabled_response_headers'] for x in response_header.conflicts_with)
+            ):
                 module.fail_json(
                     msg=f"Managed transform {response_header.id} conflicts with "
                         f"{response_header.conflicts_with} and cannot be enabled",
                     **result,
                 )
 
-            request_header.enabled = should_enable
+            response_header.enabled = should_enable
             result["changed"] = True
 
     result["managed_transforms"] = managed_transforms.to_dict()
